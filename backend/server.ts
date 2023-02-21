@@ -120,8 +120,6 @@ async function getPlaces(lat: number, lng: number, range: number, min_rating: nu
   let results: any[] = [];
   let nextPageToken: string | null = null;
   let url: string = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${process.env.GAPI_KEY}&location=${lat},${lng}&radius=${range}&types=${type}&keyword=${keyword}`;
-  // url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJ75TkT_8EzkwRbp_CYE-1awI&fields=name,types,user_ratings_total,formatted_address,website,rating,photos&key=${process.env.GAPI_KEY}`;
-
 
   while(results.length < 60) {
     await delay(1500);
