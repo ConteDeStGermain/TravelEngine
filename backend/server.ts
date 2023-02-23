@@ -8,93 +8,63 @@ app.listen(PORT, () => {
  console.log(`Server running on port ${PORT}`);
 });
 
-
 app.get("/schedule", async (req: any, res:any) => {
   const address: string = req.query.address;
-
   const coordinates = await getCoordinates(address);
-  // google places sdk result
-  // let restaurants = await getRestaurants(coordinates.lat, coordinates.lng, 10000, 4, "breakfast");
-  // let randomKey: number = Math.floor(Math.random() * Object.keys(restaurants).length);
-  // let food1 = restaurants[randomKey];
+  const dayType = "tourist_attraction|point_of_interest|establishment|art_gallery|park|library|historical_monument|historical_place|landmark|church";
+  const eveningType = "night_club|lounge|bar|tea_room|bar, pool_hall|pub";
+  const foodType = "restaurant|cafe";
+
+  const foods = await getPlaces(coordinates.lat, coordinates.lng, 50000, 4, foodType, "breakfast");
+  // const dayEvents = await getPlaces(coordinates.lat, coordinates.lng, 50000, -1, dayType, "tourist|must_see|beautiful");
+  // const eveningEvents = await getPlaces(coordinates.lat, coordinates.lng, 50000, -1, eveningType, "");
+
+  // let bk: any = foods[getRandomNum(foods.length)];
+  // let e1: any = getInRange(dayEvents, bk);
+  // let ln: any = getInRange(foods, bk);
+  // let e2: any = getInRange(dayEvents, ln);
+  // let e3: any = getInRange(dayEvents, e2);
+  // let dn: any = getInRange(foods, e3);
+  // let ne: any = getInRange(eveningEvents, dn);
+
+  res.json({foods});
+});
+
+
+
+// Version 1
+// app.get("/schedule", async (req: any, res:any) => {
+//   const address: string = req.query.address;
+
+//   const coordinates = await getCoordinates(address);
+//   // google places sdk result
+//   let attractionType = "tourist_attraction|point_of_interest|establishment|art_gallery|park|library|historical_monument|historical_place|landmark|church";
+//   let eveninngActivity = "night_club|lounge|bar|tea_room|bar, pool_hall|pub"
+//   let keyword = "basilica";
   
-  // let culturalEvent = await getAttractions(food1.lat, food1.lng, 20000);
-  // randomKey =  Math.floor(Math.random() * Object.keys(culturalEvent).length);
-  // let event1 = culturalEvent[randomKey];
-  // if (event1 == undefined) {
-  //   console.log(event1)
-  //   console.log('-------EVENT 1--------')
-  //   console.log(culturalEvent)
-  //   console.log(randomKey)
-  //   console.log(Object.keys(culturalEvent).length)
-  //   console.log(food1)
-  // }
+//   let bk: any = await getPlaces(coordinates.lat, coordinates.lng, 15000, 4, "restaurant", "breakfast");
+//   bk = bk[getRandomNum(bk.length)];
 
-  // restaurants = await getRestaurants(event1.lat, event1.lng, 5000, 4, "lunch");
-  // randomKey = Math.floor(Math.random() * Object.keys(restaurants).length );
-  // let food2 = restaurants[randomKey];
+//   let e1: any = await getPlaces(bk.lat, bk.lng, 5000, -1, attractionType, "");
+//   e1 = e1[getRandomNum(e1.length)];
 
-  // culturalEvent = await getAttractions(food2.lat, food2.lng, 20000);
-  // randomKey = Math.floor(Math.random() * Object.keys(culturalEvent).length );
-  // let event2 = culturalEvent[randomKey];
+//   let ln: any = await getPlaces(e1.lat, e1.lng, 5000, 4, "restaurant", "lunch");
+//   ln = ln[getRandomNum(ln.length)];
 
-  // if (event2 == undefined) {
-  //   console.log(event2)
-  //   console.log('-------EVENT 2--------')
-  //   console.log(culturalEvent)
-  //   console.log(culturalEvent[0])
-  //   console.log(randomKey)
-  //   console.log(Object.keys(culturalEvent).length)
-  //   console.log(food2)
+//   let e2: any = await getPlaces(ln.lat, ln.lng, 7000, -1, attractionType, "");
+//   e2 = e2[getRandomNum(e2.length)];
 
-  //   // event2 = culturalEvent;
-  // }
+//   let e3: any = await getPlaces(e2.lat, e2.lng, 7000, -1, attractionType, "");
+//   e3 = e3[getRandomNum(e3.length)];
 
-  
-  // culturalEvent = await getAttractions(event2.lat, event2.lng, 20000);
-  // randomKey = Math.floor(Math.random() * Object.keys(culturalEvent).length );
-  // let event3 = culturalEvent[randomKey]
-  // console.log(culturalEvent)
+//   let dn: any = await getPlaces(e3.lat, e3.lng, 5000, 4, "restaurant", "lunch");
+//   dn = dn[getRandomNum(dn.length)];
 
-  // if (event3 == undefined) {
-  //   console.log(event3)
-  //   console.log('-------EVENT 3--------')
-  //   console.log(culturalEvent)
-  //   console.log(randomKey)
-  //   console.log(Object.keys(culturalEvent).length)
-  //   console.log(event2)
-  // }
+//   let ne: any = await getPlaces(dn.lat, dn.lng, 7000, 4, eveninngActivity, "");
+//   ne = ne[getRandomNum(ne.length)];
 
-  // restaurants = await getRestaurants(event3.lat, event3.lng, 5000, 4, "dinner|supper");
-  // randomKey = Math.floor(Math.random() * Object.keys(restaurants).length );
-  // let food3 = restaurants[randomKey];
-
-  // let evenningActivity = await getEveningActivity(food3.lat, food3.lng, 4, 5000);
-  // randomKey = Math.floor(Math.random() * Object.keys(evenningActivity).length);
-  // let evenningActivity1 = evenningActivity[randomKey];
-  
-  // if (food1.id == food2.id || food1.id == food3.id) {
-  //   console.log("food1 duplicated")
-  // }
-
-  // if (event1.id == event2.id || event1.id == event3.id) {
-  //   console.log("event 1 is duplicated")
-  // }
-  
-  // if (event2.id == event3.id){
-  //   console.log("event 2 is duplicated")
-  // }
-  
-  let type = "tourist_attraction|point_of_interest|establishment|art_gallery|park|library|historical_monument|historical_place|landmark|city_hall";
-  // "restaurant"
-  // "night_club|lounge|bar|tea_room|bar, pool_hall|pub"
-  let keyword = "";
-
-  let test = await getPlaces(coordinates.lat, coordinates.lng, 49000, 4, type, keyword);
-  // res.json({food1, event1, food2,  event2, event3, food3, evenningActivity1});
-  test = test.sort((a, b) => b.numberOfRatings - a.numberOfRatings);
-  res.json({test});
- });
+//   res.json({bk, e1, ln, e2, e3, dn, ne});
+//  });
 
 
 async function getCoordinates(address: string): Promise<any> {
@@ -116,18 +86,17 @@ async function getCoordinates(address: string): Promise<any> {
   }
 }
 
-async function getPlaces(lat: number, lng: number, range: number, min_rating: number, type: string, keyword: string) {
+async function getPlaces(lat: number, lng: number, range: number, min_rating: any, type: string, keyword: string) {
   let results: any[] = [];
   let nextPageToken: string | null = null;
-  let url: string = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${process.env.GAPI_KEY}&location=${lat},${lng}&radius=${range}&types=${type}&keyword=${keyword}`;
+  keyword = keyword == "" ? "" : `&keyword=${keyword}`;
+  min_rating = min_rating == -1 ? "" : `&min_rating${min_rating}`;
+  let url: string = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${process.env.GAPI_KEY}&location=${lat},${lng}&radius=${range}&types=${type}${keyword}${min_rating}`;
 
   while(results.length < 60) {
-    await delay(1500);
-
+    await delay(1200); // needed to 'activate' the nextPageToken, otherwise will get INVALID_REQUEST
     url = url + (nextPageToken !== null ? `&pagetoken=${nextPageToken}` : "");
-    
     let response: any = await axios.get(url);
-
     nextPageToken = response.data.next_page_token;    
 
     let filteredResult = response.data.results.filter((result: any) => result.business_status === 'OPERATIONAL');
@@ -139,14 +108,14 @@ async function getPlaces(lat: number, lng: number, range: number, min_rating: nu
       types: result.types,
       lat: result.geometry.location.lat,
       lng: result.geometry.location.lng,
-      id: result.place_id
+      id: result.place_id,
     }));
-
+    
     results = results.concat(filteredResult);
   }
-
   results = results.sort((a, b) => b.numberOfRatings - a.numberOfRatings);
-  
+  results = results.filter((el: any) => el.numberOfRatings >= 50);
+  results = filterDuplicates(results);
   return results;
 }
 
@@ -154,6 +123,64 @@ function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function filterDuplicates(inputArr: any[]) {
+  const idSet = new Set();
+  for(const key in inputArr) {
+    idSet.add(inputArr[key].id)
+  }
+
+  let filteredArr: any[] = [];
+  for (const key in inputArr) {
+    const object = inputArr[key];
+    if (idSet.has(object.id)) {
+      filteredArr[key] = object;
+      idSet.delete(object.id);
+    }
+  }
+  filteredArr = filteredArr.filter((result: any) => result != null);
+  return filteredArr;
+}
+
+function getRandomNum(length: number) {
+  return Math.floor(Math.random() * length);
+}
+
+function withinRange(place1: any, place2: any, range: number): boolean {
+  const lat1 = place1.lat;
+  const lon1 = place1.lng;
+  const lat2 = place2.lat;
+  const lon2 = place2.lng;
+
+  const earthRadius = 6371; // in kilometers
+
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  const distanceInKm = earthRadius * c;
+
+  return distanceInKm < range;
+}
+
+function deg2rad(deg: number): number {
+  return deg * (Math.PI/180);
+}
+
+function getInRange(pool: any, aroundEvent: any) {
+  let eventInRange: any[] = [];
+  pool.forEach((event: any) => {
+    if (withinRange(event, aroundEvent, 5)) {
+      eventInRange.push(event);
+    }
+  })
+
+  return eventInRange[getRandomNum(eventInRange.length)];
+}
 
  // Create a repo with basic type typescript, express, nodemon (with a yarn/npm  package.json)
  // make it well stuctures, with src, tests, and other well though out file stucture 
