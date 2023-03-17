@@ -11,23 +11,30 @@ app.listen(PORT, () => {
 app.get("/schedule", async (req: any, res:any) => {
   const address: string = req.query.address;
   const coordinates = await getCoordinates(address);
-  const dayType = "tourist_attraction|point_of_interest|establishment|art_gallery|park|library|historical_monument|historical_place|landmark|church";
-  const eveningType = "night_club|lounge|bar|tea_room|bar, pool_hall|pub";
+  const dayType = "tourist_attraction|point_of_interest|art_gallery|park|library|historical_monument|historical_place|landmark|church";
+  const eveningType = "lounge|bar|tea_room|bar, pool_hall|pub";
   const foodType = "restaurant|cafe";
 
-  const foods = await getPlaces(coordinates.lat, coordinates.lng, 50000, 4, foodType, "breakfast");
-  // const dayEvents = await getPlaces(coordinates.lat, coordinates.lng, 50000, -1, dayType, "tourist|must_see|beautiful");
+  // const mfoods = await getPlaces(coordinates.lat, coordinates.lng, 50000, 4, foodType, "coffee shop");
+  // const foods = await getPlaces(coordinates.lat, coordinates.lng, 50000, 4, foodType, "dinner");
+  const dayEvents = await getPlaces(coordinates.lat, coordinates.lng, 50000, -1, dayType, "")
   // const eveningEvents = await getPlaces(coordinates.lat, coordinates.lng, 50000, -1, eveningType, "");
 
-  // let bk: any = foods[getRandomNum(foods.length)];
+  // console.log(mfoods.length)
+  // console.log(foods.length)
+  console.log( dayEvents.length)
+  // console.log(eveningEvents.length)
+
+  // let rand: number = getRandomNum(mfoods.length);
+  // let bk: any = mfoods[rand];
   // let e1: any = getInRange(dayEvents, bk);
-  // let ln: any = getInRange(foods, bk);
-  // let e2: any = getInRange(dayEvents, ln);
+  // let e2: any = getInRange(dayEvents, e1);
   // let e3: any = getInRange(dayEvents, e2);
   // let dn: any = getInRange(foods, e3);
   // let ne: any = getInRange(eveningEvents, dn);
 
-  res.json({foods});
+
+  // res.json({bk, e1, e2, e3, dn, ne});
 });
 
 
@@ -93,31 +100,55 @@ async function getPlaces(lat: number, lng: number, range: number, min_rating: an
   min_rating = min_rating == -1 ? "" : `&min_rating${min_rating}`;
   let url: string = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=${process.env.GAPI_KEY}&location=${lat},${lng}&radius=${range}&types=${type}${keyword}${min_rating}`;
 
-  while(results.length < 60) {
-    await delay(1200); // needed to 'activate' the nextPageToken, otherwise will get INVALID_REQUEST
-    url = url + (nextPageToken !== null ? `&pagetoken=${nextPageToken}` : "");
-    let response: any = await axios.get(url);
-    nextPageToken = response.data.next_page_token;    
+  
+  // delay(1200); // needed to 'activate' the nextPageToken, otherwise will get INVALID_REQUEST
+  url = url + (nextPageToken !== null ? `&pagetoken=${nextPageToken}` : "");
+  let response: any = await axios.get(url);
+  nextPageToken = response.data.next_page_token;    
 
-    let filteredResult = response.data.results.filter((result: any) => result.business_status === 'OPERATIONAL');
-    filteredResult = filteredResult.map((result: any) => ({
-      name: result.name,
-      address: result.vicinity,
-      ratings: result.rating,
-      numberOfRatings: result.user_ratings_total,
-      types: result.types,
-      lat: result.geometry.location.lat,
-      lng: result.geometry.location.lng,
-      id: result.place_id,
-    }));
-    
-    results = results.concat(filteredResult);
-  }
+  let filteredResult = response.data.results.filter((result: any) => result.business_status === 'OPERATIONAL');
+  filteredResult = filteredResult.map((result: any) => ({
+    name: result.name,
+    address: result.vicinity,
+    ratings: result.rating,
+    numberOfRatings: result.user_ratings_total,
+    types: result.types,
+    lat: result.geometry.location.lat,
+    lng: result.geometry.location.lng,
+    id: result.place_id,
+  }));
+  
+  results = results.concat(filteredResult);
   results = results.sort((a, b) => b.numberOfRatings - a.numberOfRatings);
   results = results.filter((el: any) => el.numberOfRatings >= 50);
   results = filterDuplicates(results);
+  
+  // ------------------
+
+  url = url + `&pagetoken=${nextPageToken}`;
+  response = await axios.get(url); 
+
+  filteredResult = response.data.results.filter((result: any) => result.business_status === 'OPERATIONAL');
+  filteredResult = filteredResult.map((result: any) => ({
+    name: result.name,
+    address: result.vicinity,
+    ratings: result.rating,
+    numberOfRatings: result.user_ratings_total,
+    types: result.types,
+    lat: result.geometry.location.lat,
+    lng: result.geometry.location.lng,
+    id: result.place_id,
+  }));
+  
+  results = results.concat(filteredResult);
+  results = results.sort((a, b) => b.numberOfRatings - a.numberOfRatings);
+  results = results.filter((el: any) => el.numberOfRatings >= 50);
+  results = filterDuplicates(results);
+
   return results;
 }
+
+
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -146,10 +177,10 @@ function getRandomNum(length: number) {
 }
 
 function withinRange(place1: any, place2: any, range: number): boolean {
-  const lat1 = place1.lat;
-  const lon1 = place1.lng;
-  const lat2 = place2.lat;
-  const lon2 = place2.lng;
+  let lat1 = place1.lat;
+  let lon1 = place1.lng;
+  let lat2 = place2.lat;
+  let lon2 = place2.lng;
 
   const earthRadius = 6371; // in kilometers
 
@@ -173,16 +204,15 @@ function deg2rad(deg: number): number {
 
 function getInRange(pool: any, aroundEvent: any) {
   let eventInRange: any[] = [];
-  pool.forEach((event: any) => {
-    if (withinRange(event, aroundEvent, 5)) {
-      eventInRange.push(event);
-    }
-  })
+  if (aroundEvent) {
 
-  return eventInRange[getRandomNum(eventInRange.length)];
+    pool.forEach((event : any) => {
+      if (withinRange(event, aroundEvent, 7)) {
+        eventInRange.push(event);
+      }
+    })
+    
+  }
+  let returnEvent = eventInRange[getRandomNum(eventInRange.length)]
+  return returnEvent;
 }
-
- // Create a repo with basic type typescript, express, nodemon (with a yarn/npm  package.json)
- // make it well stuctures, with src, tests, and other well though out file stucture 
- // Create first places endpoint
- // Copy Kyles server setup
