@@ -11,26 +11,25 @@ const SELECTORS = {
   LINK: '.hfpxzc',
   IMAGE: '.FQ2IWe.p0Hhde',
   NAV_BUTTONS: '.TQbB2b',
+  ADDITIONAL_DATA: '.Io6YTe'
 }
 
 // Scrapes the data from the page
 const getData = async (page, currentPageNum) => {
-  return await page.evaluate((opts) => {
-    const { selectors: SELECTORS } = opts;
-
+  return await page.evaluate(async (opts) => {
+    const { selectors: SELECTORS } = opts;  
     const elements = document.querySelectorAll(SELECTORS.LISTING);
     const placesElements = Array.from(elements).map(element => element.parentElement);
 
-    const places = placesElements.map((place, index) => {
-      // Getting the names
-      const name = (place.querySelector(SELECTORS.NAME)?.textContent || '').trim();
-      const rating = (place.querySelector(SELECTORS.RATINGS)?.textContent || '').trim();
-      const price = (place.querySelector(SELECTORS.PRICE)?.textContent || '').trim();
-      const link = (place.querySelector(SELECTORS.LINK)?.href || '');
-      const image = (place.querySelector(SELECTORS.IMAGE)?.children[0].src || '');
-
-      return { name, rating, price, link, image };
-    })
+    let places = []
+    for (let i = 0; i < placesElements.length; i++) {
+      const name = (placesElements[i].querySelector(SELECTORS.NAME)?.textContent || '').trim();
+      const rating = (placesElements[i].querySelector(SELECTORS.RATINGS)?.textContent || '').trim();
+      const price = (placesElements[i].querySelector(SELECTORS.PRICE)?.textContent || '').trim();
+      const link = (placesElements[i].querySelector(SELECTORS.LINK)?.href || '');
+      const image = (placesElements[i].querySelector(SELECTORS.IMAGE)?.children[0].src || '');
+      places.push({ name, rating, price, link, image})
+    }
 
     return places;
   }, { selectors: SELECTORS, currentPageNum });
@@ -40,12 +39,15 @@ const getData = async (page, currentPageNum) => {
 const scrollPage = async(page, scrollContainer, itemTargetCount) => {
   let items = [];
   let previousHeight = await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight`);
-  while (itemTargetCount > items.length) {
-      items = await getData(page);
-      await page.evaluate(`document.querySelector("${scrollContainer}").scrollTo(0, document.querySelector("${scrollContainer}").scrollHeight)`);
-      await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight > ${previousHeight}`);
-      await page.waitForTimeout(2000);
+  let cnt = 0
+  while (itemTargetCount > cnt) {
+    await page.evaluate(`document.querySelector("${scrollContainer}").scrollTo(0, document.querySelector("${scrollContainer}").scrollHeight)`);
+    await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight > ${previousHeight}`);
+    await page.waitForTimeout(2000);
+    cnt++;
   }
+
+  items = await getData(page);
   return items;
 }
 
@@ -67,7 +69,7 @@ const scrollPage = async(page, scrollContainer, itemTargetCount) => {
     await page.click('#searchboxinput')
 
     // Type our search query
-    await page.type('#searchboxinput', "Tourist attractions, Barcelona, Spain");
+    await page.type('#searchboxinput', "Tourist attractions, Rome, Italy");
     // Simulate pressing Enter key
     await page.keyboard.press('Enter');
 
@@ -75,13 +77,31 @@ const scrollPage = async(page, scrollContainer, itemTargetCount) => {
     await page.waitForSelector(SELECTORS.LISTING);
 
     // Get our final structured data
-    let finalData =  await scrollPage(page,".m6QErb[aria-label]", 50)
+    let finalData =  await scrollPage(page,".m6QErb[aria-label]", 15)
 
+    for (let i = 0; i < finalData.length; i++){
+      const link = await page.$(`a[href="${finalData[i].link}"]`);
+      await link.click();
+      await page.waitForSelector('div[aria-label^="Information for"]');
+      const card = await page.$('div[aria-label^="Information for"]');
+      let cardChildren = undefined;
+      const regex = /"Address: (.+?)"/;
+      if (card != null) {
+        cardChildren = await card.$$eval('*', elements => elements.map(el => el.outerHTML));
+        match = cardChildren[2].match(regex);
+        let subString = match[0].substring("Address: ".length);
+        subString = subString.trim(); // Remove starting and ending white spaces
+        subString = subString.substring(0, subString.length - 2);
+        finalData[i]["address"] = subString
+      }
+    }
 
     console.log(finalData, finalData.length);
 
+    await 
+
     browser.close();
-    return finalData;
+    // return finalData;
 
   } catch (error) {
     console.log(error)
