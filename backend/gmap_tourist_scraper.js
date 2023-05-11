@@ -1,7 +1,18 @@
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'postgres',
+  password: '@Builder',
+  port: 5432,
+});
+
 // You can also use puppeteer core, know more about it here https://developers.google.com/web/tools/puppeteer/get-started#puppeteer-core
 const puppeteer = require('puppeteer');
 
-const getBrowser = () => puppeteer.launch({ headless: false })
+const getBrowser = () => puppeteer.launch({ headless: true })
+
 // These are class names of some of the specific elements in these cards
 const SELECTORS = {
   NAME: '.qBF1Pd.fontHeadlineSmall',
@@ -20,22 +31,30 @@ const getData = async (page, currentPageNum) => {
     const { selectors: SELECTORS } = opts;  
     const elements = document.querySelectorAll(SELECTORS.LISTING);
     const placesElements = Array.from(elements).map(element => element.parentElement);
-
     let places = []
     for (let i = 0; i < placesElements.length; i++) {
       const name = (placesElements[i].querySelector(SELECTORS.NAME)?.textContent || '').trim();
-      const rating = (placesElements[i].querySelector(SELECTORS.RATINGS)?.textContent || '').trim();
       const price = (placesElements[i].querySelector(SELECTORS.PRICE)?.textContent || '').trim();
       const link = (placesElements[i].querySelector(SELECTORS.LINK)?.href || '');
       const image = (placesElements[i].querySelector(SELECTORS.IMAGE)?.children[0].src || '');
-      places.push({ name, rating, price, link, image})
+      const rt = (placesElements[i].querySelector(SELECTORS.RATINGS)?.textContent || '').trim();
+      const openingParenIndex = rt.indexOf('(');
+      const closingParenIndex = rt.indexOf(')');
+
+      // Extract the first number from the input string
+      const rating = parseFloat(rt.substring(0, openingParenIndex));
+
+      // Extract the second number from the input string
+      let numberOfRatings = rt.substring(openingParenIndex + 1 , closingParenIndex);
+      numberOfRatings = parseInt(numberOfRatings.replace(",", ""));
+      places.push({ name, rating, numberOfRatings, price, link, image})
     }
 
     return places;
   }, { selectors: SELECTORS, currentPageNum });
 }
 
-
+// Scrolls gmap sidebar
 const scrollPage = async(page, scrollContainer, itemTargetCount) => {
   let items = [];
   let previousHeight = await page.evaluate(`document.querySelector("${scrollContainer}").scrollHeight`);
@@ -51,8 +70,63 @@ const scrollPage = async(page, scrollContainer, itemTargetCount) => {
   return items;
 }
 
-(async () => {
+async function saveData(city, country, type, jsonString) {
+  city = city.toLowerCase();
+  country = country.toLowerCase();
+
+  let category = {
+    1: "tourist_attraction",
+    2: "breakfast",
+    3: "dinner",
+    4: "cocktail",
+    5: "club"
+  };
+
+  let categoryType = category[type] || "";
+  let placesData = JSON.parse(jsonString);
+
+  for (let i = 0; i < placesData.length; i++) {
+    try {
+      await pool.query(
+        `INSERT INTO place (city, country, type, name, address, rating, numberofratings, price, link, image)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          city,
+          country,
+          categoryType,
+          placesData[i].name,
+          placesData[i].address,
+          placesData[i].rating,
+          placesData[i].numberOfRatings,
+          placesData[i].price || 0,
+          placesData[i].link,
+          placesData[i].image,
+        ]
+      );
+      console.log('Data inserted successfully!');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function scrapeData(city, country, type) {
   let browser = null;
+  
+  const searchInputs = {
+    1: "Tourist attractions",
+    2: "breakfast coffee shops breakfast foods",
+    3: "dinner restaurants",
+    4: "late night snack cocktail lounge",
+    5: "night club"
+  };
+  let searchInput = searchInputs[type] || "";
+  
+  console.log(`Now scraping ${searchInput} for ${city} ${country}...`);
   try {
     browser = await getBrowser();
     const page = await browser.newPage();
@@ -69,7 +143,7 @@ const scrollPage = async(page, scrollContainer, itemTargetCount) => {
     await page.click('#searchboxinput')
 
     // Type our search query
-    await page.type('#searchboxinput', "Tourist attractions, Rome, Italy");
+    await page.type('#searchboxinput', `${searchInput}, ${city}, ${country}`);
     // Simulate pressing Enter key
     await page.keyboard.press('Enter');
 
@@ -77,34 +151,44 @@ const scrollPage = async(page, scrollContainer, itemTargetCount) => {
     await page.waitForSelector(SELECTORS.LISTING);
 
     // Get our final structured data
-    let finalData =  await scrollPage(page,".m6QErb[aria-label]", 15)
+    let finalData =  await scrollPage(page,".m6QErb[aria-label]", 25)
+    console.log("Finished scrolling...");
 
-    for (let i = 0; i < finalData.length; i++){
+    for (let i = 0; i < finalData.length; i++) {
       const link = await page.$(`a[href="${finalData[i].link}"]`);
       await link.click();
+      await delay(2000);
       await page.waitForSelector('div[aria-label^="Information for"]');
-      const card = await page.$('div[aria-label^="Information for"]');
-      let cardChildren = undefined;
-      const regex = /"Address: (.+?)"/;
-      if (card != null) {
-        cardChildren = await card.$$eval('*', elements => elements.map(el => el.outerHTML));
-        match = cardChildren[2].match(regex);
-        let subString = match[0].substring("Address: ".length);
-        subString = subString.trim(); // Remove starting and ending white spaces
-        subString = subString.substring(0, subString.length - 2);
-        finalData[i]["address"] = subString
+    
+      // Get the button with an aria-label that starts with "Address:"
+      const addressButton = await page.$('button[aria-label^="Address:"]');
+    
+      if (addressButton) {
+        let addressLabel = undefined;
+        // Extract the address from the aria-label attribute
+        addressLabel = await addressButton.evaluate(el => el.getAttribute('aria-label'));
+        let regex = /^Address:\s*(.+)$/i;
+        match = addressLabel.match(regex);
+    
+        let address = '';
+        address = match[1].trim();
+        finalData[i]["address"] = address;
       }
     }
 
-    console.log(finalData, finalData.length);
+    console.log('Finished finding addresses');
+    const jsonString = JSON.stringify(finalData);
 
-    await 
+    // Save data to database
+    await saveData(city, country, type, jsonString);
 
-    browser.close();
+    await browser.close();
     // return finalData;
-
   } catch (error) {
     console.log(error)
   }
+};
 
-})();
+module.exports = {
+  scrapeData,
+};
