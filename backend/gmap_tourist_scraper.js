@@ -11,7 +11,7 @@ const pool = new Pool({
 // You can also use puppeteer core, know more about it here https://developers.google.com/web/tools/puppeteer/get-started#puppeteer-core
 const puppeteer = require('puppeteer');
 
-const getBrowser = () => puppeteer.launch({ headless: true })
+const getBrowser = () => puppeteer.launch({ headless: false })
 
 // These are class names of some of the specific elements in these cards
 const SELECTORS = {

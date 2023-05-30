@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { readFile } from 'fs/promises';
 import { scrapeData } from './gmap_tourist_scraper';
 import { Pool } from 'pg';
 
@@ -20,202 +19,57 @@ app.listen(PORT, () => {
  console.log(`Server running on port ${PORT}`);
 });
 
-let places = [
-  "Cluj-napoca, Romania",
-  "Brasov, Romania",
-  "Iasi, Romania",
-  "Timisoara, Romania",
-  "Bangkok, Thailand",
-  "London, United Kingdom",
-  "Paris, France",
-  "Dubai, United Arab Emirates",
-  "New York City, United States",
-  "Singapore, Singapore",
-  "Kuala Lumpur, Malaysia",
-  "Istanbul, Turkey",
-  "Tokyo, Japan",
-  "Seoul, South Korea",
-  "Hong Kong, Hong Kong",
-  "Barcelona, Spain",
-  "Amsterdam, Netherlands",
-  "Milan, Italy",
-  "Taipei, Taiwan",
-  "Rome, Italy",
-  "Osaka, Japan",
-  "Vienna, Austria",
-  "Shanghai, China",
-  "Prague, Czech Republic",
-  "Los Angeles, United States",
-  "Munich, Germany",
-  "Miami, United States",
-  "Dublin, Ireland",
-  "Delhi, India",
-  "Toronto, Canada",
-  "Berlin, Germany",
-  "Las Vegas, United States",
-  "Marrakech, Morocco",
-  "Sydney, Australia",
-  "Lisbon, Portugal",
-  "Rio de Janeiro, Brazil",
-  "Budapest, Hungary",
-  "Bangalore, India",
-  "Bali, Indonesia",
-  "Beijing, China",
-  "Cairo, Egypt",
-  "Cape Town, South Africa",
-  "Vancouver, Canada",
-  "Buenos Aires, Argentina",
-  "Jerusalem, Israel",
-  "Hanoi, Vietnam",
-  "Ho Chi Minh City, Vietnam",
-  "Copenhagen, Denmark",
-  "Brussels, Belgium",
-  "Jakarta, Indonesia",
-  "Melbourne, Australia",
-  "Athens, Greece",
-  "Warsaw, Poland",
-  "Mexico City, Mexico",
-  "San Francisco, United States",
-  "Tel Aviv, Israel",
-  "Havana, Cuba",
-  "Saint Petersburg, Russia",
-  "Edinburgh, United Kingdom",
-  "Zurich, Switzerland",
-  "Auckland, New Zealand",
-  "Helsinki, Finland",
-  "Stockholm, Sweden",
-  "Lima, Peru",
-  "Sao Paulo, Brazil",
-  "Kolkata, India",
-  "Casablanca, Morocco",
-  "Bogota, Colombia",
-  "Lyon, France",
-  "Mumbai, India",
-  "Chicago, United States",
-  "Antalya, Turkey",
-  "Phuket, Thailand",
-  "Mecca, Saudi Arabia",
-  "Krakow, Poland",
-  "Venice, Italy",
-  "Guangzhou, China",
-  "Granada, Spain",
-  "Florence, Italy",
-  "Moscow, Russia",
-  "Dublin, Ireland",
-  "Seattle, United States",
-  "Boston, United States",
-  "Shenzhen, China",
-  "Brisbane, Australia",
-  "Quebec City, Canada",
-  "Bordeaux, France",
-  "Santiago, Chile",
-  "Damascus, Syria",
-  "San Diego, United States",
-  "Valencia, Spain",
-  "Frankfurt, Germany",
-  "Calgary, Canada",
-  "Orlando, United States",
-  "Cancun, Mexico",
-  "Johannesburg, South Africa",
-  "Monaco, Monaco",
-  "Bucharest, Romania",
-  "Cartagena, Colombia",
-  "Kyoto, Japan",
-  "Chiang Mai, Thailand",
-  "Lahore, Pakistan",
-  "Salvador, Brazil",
-  "Manchester, United Kingdom",
-  "Belfast, United Kingdom",
-  "Cologne, Germany",
-  "Sofia, Bulgaria",
-  "Bratislava, Slovakia",
-  "Porto, Portugal",
-  "Perth, Australia",
-  "Ljubljana, Slovenia",
-  "Belgrade, Serbia",
-  "Birmingham, United Kingdom",
-  "Edmonton, Canada",
-  "Guadalajara, Mexico",
-  "Monterrey, Mexico",
-  "Quito, Ecuador",
-  "Tashkent, Uzbekistan",
-  "Riga, Latvia",
-  "Nairobi, Kenya",
-  "Tallinn, Estonia",
-  "Krabi, Thailand",
-  "Da Nang, Vietnam",
-  "Penang, Malaysia",
-  "Minsk, Belarus",
-  "Algiers, Algeria",
-  "Accra, Ghana",
-  "Harare, Zimbabwe",
-  "Dar es Salaam, Tanzania",
-  "Colombo, Sri Lanka",
-  "Phnom Penh, Cambodia",
-  "Yangon, Myanmar",
-  "Lusaka, Zambia",
-  "Kigali, Rwanda",
-  "Abuja, Nigeria",
-  "Dhaka, Bangladesh",
-  "Kathmandu, Nepal",
-  "Amman, Jordan",
-  "Muscat, Oman",
-  "Baku, Azerbaijan",
-  "Tbilisi, Georgia",
-  "Yerevan, Armenia",
-  "Astana, Kazakhstan",
-  "Islamabad, Pakistan",
-  "Karachi, Pakistan",
-  "Male, Maldives",
-  "Reykjavik, Iceland",
-  "Tunis, Tunisia",
-  "Rabat, Morocco",
-  "Lima, Peru",
-  "Montevideo, Uruguay",
-  "Caracas, Venezuela",
-  "Kingston, Jamaica",
-  "Bridgetown, Barbados",
-  "Havana, Cuba",
-  "Port-au-Prince, Haiti",
-  "Nassau, Bahamas",
-  "San Juan, Puerto Rico"
-];
-
-app.get("/schedule", async (req: any, res: any) => {
-  const address: string = req.query.address.toLowerCase();
-  // const coordinates = await getCoordinates(address);
-  // let [city, country] = address.split(', ');  
-  let [city, country] = "";  
-  
-  let index = 0;
-  let stoppedCountry = "";
-
+app.get("/day_itin", async (req: any, res: any) => {
   try {
-    for (let i = 0; i < places.length; i++) {
-      [city, country] = places[i].split(', ');
-      index = i;
-      stoppedCountry = places[i];
+    const address: string = req.query.address.toLowerCase();
+    const offset: number = Number(req.query.offset || 0);
+    console.log("Getting day event for " + address + ", " + offset);
+
+    let [city, country] = address.split(', ');
+
+    if (city == undefined || country == undefined) {
+      res.status(400).json({ error: 'Address must include both city and country' });
+      return;
+    }
+
+    if (!(await cityCountryInDB(city, country))) {
       await scrapeMissingCity(city, country);
     }
+
+    let attractions = await getPlaceDetails(city, country, 'tourist_attraction');
+    let bk = await getPlaceDetails(city, country, 'breakfast');
+    let dnr = await getPlaceDetails(city, country, 'dinner');
+    let ckt = await getPlaceDetails(city, country, 'cocktail');
+    let clb = await getPlaceDetails(city, country, 'club');
+
+    if (offset < 0 || offset + 2 >= attractions.length) {
+      res.status(400).json({ error: 'Invalid offset parameter' });
+      return;
+    }
+
+    let event1 = attractions[offset];
+    let event2 = attractions[offset + 1];
+    let event3 = attractions[offset + 2];
+
+    // let breakfastPlace = await getInRange(bk, event1);
+    // let dinnerPlace = await getInRange(dnr, event2);
+    // let cocktailPlace = await getInRange(ckt, event3);
+    // let clubPlace = await getInRange(clb, dinnerPlace);
+
+    let breakfastPlace = bk[getRandomNum(bk.length)];
+    let dinnerPlace = dnr[getRandomNum(dnr.length)];
+    let cocktailPlace = ckt[getRandomNum(ckt.length)];
+    let clubPlace = clb[getRandomNum(clb.length)];
+
+    console.log('Done!')
+    res.json({breakfastPlace, event1, dinnerPlace, event2, event3, cocktailPlace, clubPlace});
   } catch (error) {
-    console.log(error);
-    console.log(index);
-    console.log(stoppedCountry)
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while processing your request' });
   }
-
-  
-
-  // res.json("Received");
 });
 
 
-interface PlaceDetails {
-  name: string;
-  address: string;
-  rating: number;
-  numberOfRatings: number;
-  isOpen: boolean;
-}
 
 async function getCoordinates(address: string): Promise<any> {
   try {
@@ -317,7 +171,7 @@ function getRandomNum(length: number) {
   return Math.floor(Math.random() * length);
 }
 
-function withinRange(place1: any, place2: any, range: number): boolean {
+function withinRange(place1: any, place2: any, range: number): boolean {  
   let lat1 = place1.lat;
   let lon1 = place1.lng;
   let lat2 = place2.lat;
@@ -343,49 +197,19 @@ function deg2rad(deg: number): number {
   return deg * (Math.PI/180);
 }
 
-function getInRange(pool: any, aroundEvent: any) {
-  let eventInRange: any[] = [];
-  if (aroundEvent) {
+async function getInRange(pool: any, aroundEvent: any) {
+  let coords = await getCoordinates(aroundEvent.address);
+  let eventsInRange: any[] = [];
 
-    pool.forEach((event : any) => {
-      if (withinRange(event, aroundEvent, 7)) {
-        eventInRange.push(event);
-      }
-    })
-    
-  }
-  let returnEvent = eventInRange[getRandomNum(eventInRange.length)]
-  return returnEvent;
-}
-
-async function getPlaceDetails(placeName: string): Promise<PlaceDetails | null> {
-  try {
-    // Step 1: Search for the place using the place name
-    const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(placeName)}&inputtype=textquery&fields=place_id&key=${process.env.GAPI_KEY}`;
-    const searchResponse = await axios.get(searchUrl);
-    const placeId = searchResponse.data.candidates[0]?.place_id;
-
-    if (!placeId) {
-      console.error('Place not found.');
-      return null;
+  for (let key in pool) {
+    let eventCoords = await getCoordinates(pool[key].address);
+    if (withinRange(eventCoords, coords, 7)) {
+      eventsInRange.push(pool[key])
     }
-
-    // Step 2: Get the place details using the place ID
-    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,rating,user_ratings_total,formatted_address,opening_hours&key=${process.env.GAPI_KEY}`;
-    const detailsResponse = await axios.get(detailsUrl);
-    const placeDetails = detailsResponse.data.result;
-
-    return {
-      name: placeDetails.name,
-      address: placeDetails.formatted_address,
-      numberOfRatings: placeDetails.user_ratings_total,
-      rating: placeDetails.rating,
-      isOpen: placeDetails.opening_hours?.open_now,
-    };
-  } catch (error) {
-    console.error('Error fetching place details:', error);
-    return null;
   }
+
+  let returnEvent = eventsInRange[getRandomNum(eventsInRange.length)]
+  return returnEvent;
 }
 
 async function scrapeMissingCity(city: string, country: string) {
@@ -396,11 +220,23 @@ async function scrapeMissingCity(city: string, country: string) {
   await scrapeData(city, country, 5);
 }
 
-async function cityCountryExists(city: string, country: string): Promise<boolean> {
+async function cityCountryInDB(city: string, country: string): Promise<boolean> {
   const res = await pool.query(
     'SELECT * FROM place WHERE city = $1 AND country = $2',
     [city, country]
   );
-
   return res.rowCount > 0;
+}
+
+async function getPlaceDetails(city: string, country: string, type: string): Promise<any[]> {
+  try {
+    const res = await pool.query(
+      'SELECT * FROM place WHERE city = $1 and country = $2 and type = $3 and rating IS NOT NULL and numberofratings IS NOT NULL and rating > 3.9 and numberofratings > 99 ORDER BY numberofratings DESC',
+      [city, country, type]
+    );
+    return res.rows;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
 }
