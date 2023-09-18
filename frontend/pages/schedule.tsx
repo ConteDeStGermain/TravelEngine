@@ -13,7 +13,7 @@ import {
 const ScheduleSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dayData, setDayData] = useState<any>({});
-  const { sharedData } = useContext(SharedDataContext);
+  const { sharedData } = useContext<any>(SharedDataContext);
   const [editState, setEditState] = useState<boolean>(true);
 
   function calculateDays(data) {
