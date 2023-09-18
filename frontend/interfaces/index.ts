@@ -21,3 +21,9 @@ export type Event = {
   address: string;
   name: string;
 };
+
+export type TransferData = {
+  destination: String
+  dates: any
+  submitted: boolean
+}
