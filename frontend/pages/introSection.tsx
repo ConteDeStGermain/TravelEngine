@@ -6,6 +6,10 @@ import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import DatePicker from "../components/DatePicker";
 import { SharedDataContext } from ".";
 
+type cityWithId = {
+  id: number,
+  name: string
+}
 
 const IntroSection = () => {
   const [cities, setCities] = useState([]);
@@ -64,7 +68,7 @@ const IntroSection = () => {
               <div className="relative w-full cursor-default overflow-hidden rounded-lg  text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
                 <Combobox.Input
                   className="w-[325px] rounded-[5px] placeholder:text-[#F4F7F6] bg-[#F4F7F6]/30 backdrop-filter backdrop-blur-md border-none p-3 font-semibold leading-5 text-[#F4F7F6] text-xl focus:ring-0"
-                  displayValue={(city) => city.name}
+                  displayValue={(city: cityWithId) => city.name}
                   placeholder="Enter your next destination ✈️"
                   onChange={(event) => setQuery(event.target.value)}
                 />
