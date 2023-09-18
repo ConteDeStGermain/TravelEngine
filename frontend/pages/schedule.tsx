@@ -10,10 +10,12 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/20/solid";
 
+import { SharedDataContextType } from '../interfaces';
+
 const ScheduleSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dayData, setDayData] = useState<any>({});
-  const { sharedData } = useContext<any>(SharedDataContext);
+  const { sharedData } = useContext<SharedDataContextType>(SharedDataContext);
   const [editState, setEditState] = useState<boolean>(true);
 
   function calculateDays(data) {

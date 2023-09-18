@@ -27,3 +27,8 @@ export type TransferData = {
   dates: any
   submitted: boolean
 }
+
+export type SharedDataContextType = {
+  sharedData: TransferData;
+  setSharedData: React.Dispatch<React.SetStateAction<TransferData>>;
+};

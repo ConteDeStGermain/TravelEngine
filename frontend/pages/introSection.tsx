@@ -5,7 +5,7 @@ import { Combobox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import DatePicker from "../components/DatePicker";
 import { SharedDataContext } from ".";
-import { TransferData } from "../interfaces";
+import { SharedDataContextType } from "../interfaces";
 
 type cityWithId = {
   id: number,
@@ -16,7 +16,7 @@ const IntroSection = () => {
   const [cities, setCities] = useState([]);
   const [selected, setSelected] = useState(cities[0]);
   const [query, setQuery] = useState("");
-  const { setSharedData } = useContext<any>(SharedDataContext);
+  const { setSharedData } = useContext<SharedDataContextType>(SharedDataContext);
 
   useEffect(() => {
     async function fetchCities() {

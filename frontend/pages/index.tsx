@@ -2,12 +2,7 @@ import { useState, createContext } from 'react';
 import Layout from '../components/Layout'
 import ScheduleSection from './schedule'
 import IntroSection from './introSection'
-import { TransferData } from '../interfaces';
-
-type SharedDataContextType = {
-  sharedData: TransferData;
-  setSharedData: React.Dispatch<React.SetStateAction<TransferData>>;
-};
+import { TransferData, SharedDataContextType } from '../interfaces';
 
 export const SharedDataContext = createContext<SharedDataContextType>(undefined);
 
