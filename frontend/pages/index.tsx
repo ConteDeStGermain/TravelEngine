@@ -4,7 +4,12 @@ import ScheduleSection from './schedule'
 import IntroSection from './introSection'
 import { TransferData } from '../interfaces';
 
-export const SharedDataContext = createContext(undefined);
+type SharedDataContextType = {
+  sharedData: TransferData;
+  setSharedData: React.Dispatch<React.SetStateAction<TransferData>>;
+};
+
+export const SharedDataContext = createContext<SharedDataContextType>(undefined);
 
 const IndexPage = () => {
   const [sharedData, setSharedData] = useState<TransferData>({ destination: undefined, dates: undefined, submitted: false});
