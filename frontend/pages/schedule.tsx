@@ -1,6 +1,6 @@
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useState, useEffect, useContext } from "react";
-import { Event } from "../interfaces";
+import { Event, SharedDataContextType } from "../interfaces";
 import Link from "next/link";
 import { SharedDataContext } from ".";
 import {
@@ -10,7 +10,6 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/20/solid";
 
-import { SharedDataContextType } from '../interfaces';
 
 const ScheduleSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

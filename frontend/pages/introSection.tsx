@@ -4,8 +4,8 @@ import { Fragment, useContext, useEffect, useState } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import DatePicker from "../components/DatePicker";
-import { SharedDataContext } from ".";
 import { SharedDataContextType } from "../interfaces";
+import { SharedDataContext } from ".";
 
 type cityWithId = {
   id: number,
