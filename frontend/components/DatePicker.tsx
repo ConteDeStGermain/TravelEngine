@@ -143,7 +143,7 @@ const DatePicker: React.FC = () => {
           ml-5 mt-5 rounded-[5px] 
           placeholder:text-[#F4F7F6] bg-[#F4F7F6]/30 
           backdrop-filter backdrop-blur-lg border-none p-3 
-          font-semibold leading-5 text-[#F4F7F6] text-xl 
+          font-semibold leading-5 text-[#F4F7F6] text-lg  lg:text-xl 
           focus:ring-0 transition-width duration-500
           "
         value={dateRangeText()}
