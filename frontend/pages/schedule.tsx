@@ -148,7 +148,7 @@ const ScheduleSection = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen bg-[#F4F7F6]">
+    <div className="relative w-screen h-[110vh] lg:h-screen bg-[#F4F7F6]">
       <div className="relative ml-[10%] mb-[15px] flex justify-between items-center pt-9 pb-3 bg-[#F4F7F6] w-[80%]">
         <div>
           <button className="py-2 px-2 rounded-full bg-[#7DABB4] mr-3 drop-shadow-md">
