@@ -160,7 +160,7 @@ const DatePicker: React.FC = () => {
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="w-[260px] bg-[#F4F7F6]/30 backdrop-filter backdrop-blur-lg rounded-[5px] absolute p-3 mt-3 top-0 lg:top-auto lg:ml-5" ref={calendarRef}>
+        <div className="w-[260px] bg-[#F4F7F6]/30 backdrop-filter backdrop-blur-lg rounded-[5px] absolute p-3 mt-3 top-1/2 left-1/2 lg:top-auto lg:left-auto lg:ml-5 transform -translate-x-1/2 -translate-y-1/2 lg:transform-none lg:translate-x-0 lg:translate-y-0" ref={calendarRef}>
           <div className='arrow-up'></div>
           <div className="flex justify-between items-center px-2 py-1">
             <button className='text-[#F4F7F6]' onClick={prevMonth}>Prev</button>
