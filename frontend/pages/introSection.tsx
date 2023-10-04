@@ -60,8 +60,8 @@ const IntroSection = () => {
   return (
     <div className="relative w-screen h-screen bg-cover bg-top bg-[url(../public/intro_image.jpg)] " >
       <div className="absolute inset-x-0 top-[18%] z-10 flex flex-col justify-center items-center">
-        <h1 className="lg:text-9xl text-7xl font-bold text-[#F4F7F6]">TravelEngine</h1>
-        <h3 className="lg:text-6xl text-4xl font-light text-[#F4F7F6]">
+        <h1 className="lg:text-9xl text-5xl font-bold text-[#F4F7F6]">TravelEngine</h1>
+        <h3 className="lg:text-6xl text-2xl font-light text-[#F4F7F6]">
           An itinerary for every destination
         </h3>
         <div className="flex items-center flex-col lg:flex-row">
