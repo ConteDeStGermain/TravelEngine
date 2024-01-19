@@ -1,4 +1,4 @@
-import { useState, createContext } from 'react';
+import { useState, createContext, useEffect } from 'react';
 import Layout from '../components/Layout'
 import ScheduleSection from './schedule'
 import IntroSection from './introSection'
@@ -26,7 +26,7 @@ const IndexPage = () => {
     <Layout title="TravelEngine | Trip Planner">
         <IntroSection />
         <ScheduleSection />
-        <MapSection apiKey={process.env.GMAP_API} waypoints={waypoints} />
+        <MapSection waypoints={waypoints} />
       </Layout>
     </SharedDataContext.Provider>
   )

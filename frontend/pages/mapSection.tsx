@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
-const MapContainer = ({ apiKey, waypoints }) => {
-  const [map, setMap] = useState(null);
 
+const MapContainer = ({ waypoints }) => {
+  const [map, setMap] = useState(null);
+  const apiKey = process.env.NEXT_PUBLIC_GMAP_API
   useEffect(() => {
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;

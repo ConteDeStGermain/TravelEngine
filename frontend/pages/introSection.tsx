@@ -1,5 +1,3 @@
-import Image from "next/image";
-import EuroCity from "../public/intro_image.jpg";
 import { Fragment, useContext, useEffect, useState } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
@@ -55,14 +53,18 @@ const IntroSection = () => {
     }
   }, [selected]);
         
+  const bgImageStyle: React.CSSProperties = {
+    backgroundImage: "../public/intro_image.jpg"
+  };
+
   return (
-    <div className="relative w-screen h-screen">
+    <div className="relative w-screen h-screen bg-cover bg-top bg-[url(../public/intro_image.jpg)] " >
       <div className="absolute inset-x-0 top-[18%] z-10 flex flex-col justify-center items-center">
-        <h1 className="text-9xl font-bold text-[#F4F7F6]">TravelEngine</h1>
-        <h3 className="text-6xl font-light text-[#F4F7F6]">
+        <h1 className="lg:text-9xl text-7xl font-bold text-[#F4F7F6]">TravelEngine</h1>
+        <h3 className="lg:text-6xl text-4xl font-light text-[#F4F7F6]">
           An itinerary for every destination
         </h3>
-        <div className="flex items-center">
+        <div className="flex items-center flex-col lg:flex-row">
           {/* <label htmlFor="destination" className="mr-3 text-2xl font-light text-[#F4F7F6]">Destination:</label> */}
           <Combobox value={selected} onChange={setSelected}>
             <div className="relative mt-5">
@@ -87,7 +89,7 @@ const IntroSection = () => {
                 leaveTo="opacity-0"
                 afterLeave={() => setQuery("")}
               >
-                <Combobox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-[#F4F7F6]/30 backdrop-filter backdrop-blur-md py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-[#F4F7F6]/30 backdrop-filter backdrop-blur-md py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                   {filteredCities.length === 0 && query !== "" ? (
                     <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
                       Generate missing place!
@@ -149,11 +151,6 @@ const IntroSection = () => {
           Generate
         </button>
       </div>
-      <Image
-        alt="Beautiful landscape of a European city"
-        src={EuroCity}
-        className="z-0"
-      />
     </div>
   );
 };
