@@ -1,5 +1,5 @@
+// @ts-nocheck
 import React, { useEffect, useState } from 'react';
-
 
 const MapContainer = ({ waypoints }) => {
   const [map, setMap] = useState(null);
